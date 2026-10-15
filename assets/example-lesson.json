@@ -1,0 +1,8 @@
+{
+  "title": "齿轮传动 · 风格预览",
+  "segments": [
+    {"id":"s01","scene":0,"narration":"一个负责输入，另一个接过转动。","draft_duration":8,"tail":0.25,"focus":["large"],"claims":["gear-rotation"]},
+    {"id":"s02","scene":1,"narration":"观察接触的位置：两只外啮合齿轮的转向相反。","draft_duration":8,"tail":0.25,"focus":["contact"],"claims":["gear-rotation"]},
+    {"id":"s03","scene":2,"narration":"36 齿带动 18 齿：小轮转得更快，转速是大轮的 2 倍。","draft_duration":8,"tail":0.25,"focus":["small"],"claims":["gear-ratio"]}
+  ]
+}

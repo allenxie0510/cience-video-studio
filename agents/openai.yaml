@@ -1,0 +1,4 @@
+interface:
+  display_name: "科普视频工坊"
+  short_description: "空间结构优先3D，以运镜、剖切和认知版式组织自然中文科普视频"
+  default_prompt: "用 $science-video-studio 制作中文科普视频：适合空间表达时优先3D，用整体定位、局部剖切与关键特写讲清因果，配自然旁白和同步字幕。"
