@@ -28,6 +28,7 @@ def check(root,stage):
         ids=x.get('claim_ids',[]);need(bool(ids) or bool(x.get('nonfactual_reason')),f'{x.get("surface")}: uncovered')
         need(all(i in by for i in ids),f'{x.get("surface")}: unknown claim')
     shots=json.loads((root/'shots.json').read_text());required=['title','cover','visuals']+[f'shot:{s["id"]}' for s in shots]+[f'label:{v["id"]}' for v in g.get('visual_items',[])]+[f'lesson:{s["id"]}' for s in lesson['segments']]
+    if (root/'description.txt').is_file(): required.append('description')
     for k in required: need(k in surfaces,f'Missing coverage {k}')
     for issue in g.get('issues',[]): need(issue.get('status')=='resolved' and bool(issue.get('resolution')),f'Open issue {issue.get("id")}')
     for st in (['script'] if stage=='script' else ['script','final']):
@@ -35,12 +36,14 @@ def check(root,stage):
         need(bool(reviews),f'No independent {st} review')
         for r in reviews:
             hs=r.get('artifact_hashes',{});need(bool(hs),f'{st}: missing reviewed version hashes');minimum=['lesson.json','sources.json','shots.json','science-claims.json'] if st=='script' else ['final.mp4','src/model.mjs','src/director.mjs','src/film.mjs','preview.html','assets/opening.png','assets/cover-3x4.png','build/timeline.json','build/captions.srt','build/narration.wav'];need(all(k in hs for k in minimum),f'{st}: incomplete reviewed assets')
+            if (root/'description.txt').is_file(): need('description.txt' in hs,f'{st}: description not bound')
             for name,h in hs.items():
                 f=(root/name).resolve();need(f.is_relative_to(root.resolve()) and f.is_file() and digest(f)==h,f'{st}: changed reviewed asset {name}')
     if stage=='final':
         for k in ['model','visual_science','audio_semantics','captions_match','cover_science']:
             need(g.get('checks',{}).get(k,{}).get('status')=='pass',f'Final check not passed: {k}')
         assets=g.get('assets',{});need(all(k in assets for k in ['final.mp4','lesson.json','sources.json','shots.json','science-claims.json','src/model.mjs','src/director.mjs','src/film.mjs','preview.html','assets/opening.png','assets/cover-3x4.png','build/timeline.json','build/captions.srt','build/narration.wav']),'Final assets incompletely locked')
+        if (root/'description.txt').is_file(): need('description.txt' in assets,'Description not locked')
         for name,h in assets.items():
             f=(root/name).resolve();need(f.is_relative_to(root.resolve()) and f.is_file() and digest(f)==h,f'Changed/missing final asset {name}')
         need(g.get('status')=='pass','Final gate status not pass')
