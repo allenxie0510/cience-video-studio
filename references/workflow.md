@@ -14,6 +14,8 @@
 
 ```
 brief.json             # 观众、学习结果、画幅、风格、档位、交付范围
+science-gate.json      # 陈述覆盖、独立复核、问题关闭与资产锁定
+science-review.md      # 可读的修订与验收证据
 sources.json           # claim ID → 来源 URL/定位/核验情况/简化
 lesson.json            # 旁白、音频文件、画面对象、动作
 shots.json             # 教学目的、片段绑定、景别、相机、剖切、版式与转场
