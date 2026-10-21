@@ -54,3 +54,7 @@ node scripts/render.mjs --url 'http://127.0.0.1:PORT/preview.html?export=1&style
 - 世界标注先更新矩阵再投影到屏幕；处理遮挡。字幕、读数和二维曲线作为明确的屏幕叠层，与相机共享最新状态和时间。
 - 交互 OrbitControls 等用户相机控制在导出模式中禁用，确定性相机轨迹仍运行；“禁用交互”不等于把相机冻结在默认机位。
 - 默认输出依旧兼容逐帧浏览器渲染。若选 Blender 等离线引擎，由该引擎按同一帧时间导出，再合成相同音轨/字幕；当前 `render.mjs` 不自动驱动 Blender，不宣称已有现成适配器。
+
+## 实际像素尺寸核对
+
+桌面浏览器的deviceScaleFactor/视口覆盖未必在当前运行时生效。导出前读实际innerWidth/innerHeight/devicePixelRatio及内容边界，解读首张PNG的像素宽高；不凭请求参数宣称1280×720。必要时让导出舞台固定目标CSS尺寸、贴左上角，再用CDP明确clip并按实际DPR缩放，避免居中边距、裁切和Retina双倍尺寸。验证后逐帧保持同一矩形；不能将含边框或被裁的截图直接送入编码器。
