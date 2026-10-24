@@ -13,6 +13,7 @@ export async function render(taskSpace, opts) {
   await page.cdp('Emulation.setDeviceMetricsOverride', {width:opts.width,height:opts.height,deviceScaleFactor:1,mobile:false});
   await page.waitForFunction('window.__VIDEO__ && typeof window.__VIDEO__.setTime === "function"');
   await page.evaluate(async () => { await document.fonts.ready; });
+  const nativeFrameExport = await page.evaluate(() => typeof window.__VIDEO__.getFramePNG === 'function');
   const full = await page.evaluate(() => window.__VIDEO__.duration);
   if (!Number.isFinite(full) || full <= 0) throw new Error('Invalid __VIDEO__.duration');
   const duration = Math.min(opts.seconds ?? full, full);
@@ -34,9 +35,19 @@ export async function render(taskSpace, opts) {
   try {
     for(let i=0;i<frames;i++){
       if(streamError) throw streamError;
-      await page.evaluate(async t=>{await window.__VIDEO__.setTime(t);},i/opts.fps);
-      const shot = await page.cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
-      if(!ff.stdin.write(Buffer.from(shot.data,'base64'))) await once(ff.stdin,'drain');
+      await page.evaluate(async t=>{await window.__VIDEO__.setTime(t);const issues=window.__VIDEO__.auditLayout?.()||[];if(issues.length)throw Error(`Layout failed at ${t}: ${JSON.stringify(issues)}`);},i/opts.fps);
+      let png;
+      if(nativeFrameExport){
+        const data=await page.evaluate(async()=>window.__VIDEO__.getFramePNG());
+        if(typeof data!=='string') throw Error('getFramePNG must return a PNG base64 string');
+        png=Buffer.from(data,'base64');
+      }else{
+        const dpr=await page.evaluate(()=>devicePixelRatio);
+        const shot=await page.cdp('Page.captureScreenshot',{format:'png',clip:{x:0,y:0,width:opts.width,height:opts.height,scale:1/dpr},captureBeyondViewport:false,fromSurface:true});
+        png=Buffer.from(shot.data,'base64');
+      }
+      if(png.length<24||png.toString('hex',0,8)!=='89504e470d0a1a0a'||png.readUInt32BE(16)!==opts.width||png.readUInt32BE(20)!==opts.height)throw Error('PNG dimensions differ from requested output; inspect the stage and actual DPR');
+      if(!ff.stdin.write(png)) await once(ff.stdin,'drain');
       if(i % (opts.fps*5)===0) console.log(`frame ${i}/${frames}`);
     }
     ff.stdin.end();
